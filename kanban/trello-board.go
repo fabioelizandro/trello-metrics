@@ -1,6 +1,7 @@
 package kanban
 
 import (
+	"sort"
 	"time"
 
 	"github.com/adlio/trello"
@@ -41,7 +42,7 @@ func (b *TrelloBoard) DoneCards() ([]*Card, error) {
 
 	cardChannel := make(chan *cardFetchResult)
 	for _, trelloCard := range trelloCards {
-		go b.trelloCardToCard(trelloCard, cardChannel)
+		go b.trelloCardToCard(trelloCard, trelloColumns, cardChannel)
 	}
 
 	cards := []*Card{}
@@ -57,8 +58,8 @@ func (b *TrelloBoard) DoneCards() ([]*Card, error) {
 	return cards, nil
 }
 
-func (b *TrelloBoard) trelloCardToCard(card *trello.Card, channel chan *cardFetchResult) {
-	listDurations, err := card.GetListDurations()
+func (b *TrelloBoard) trelloCardToCard(card *trello.Card, columns []*trello.List, channel chan *cardFetchResult) {
+	listChangeAction, err := card.GetListChangeActions()
 	if err != nil {
 		channel <- &cardFetchResult{
 			card: nil,
@@ -67,31 +68,49 @@ func (b *TrelloBoard) trelloCardToCard(card *trello.Card, channel chan *cardFetc
 		return
 	}
 
-	if len(listDurations) == 0 { // handle cards created in the done list
+	sortedActions := listChangeAction.FilterToListChangeActions()
+	sort.Slice(sortedActions, func(i, j int) bool {
+		return sortedActions[i].Date.Before(sortedActions[j].Date)
+	})
+
+	if len(sortedActions) == 0 {
 		channel <- &cardFetchResult{
 			card: &Card{
 				Name:           card.Name,
 				DurationInDays: 0,
 			},
-			err: nil,
+			err:  nil,
 		}
 		return
 	}
 
 	var firstEnteredReadyList time.Time
 	var firstEnteredDoneList time.Time
-	for _, listDuration := range listDurations {
-		if listDuration.ListName == "Ready" {
-			firstEnteredReadyList = listDuration.FirstEntered
+	var firstEnteredInProgressList time.Time
+	for _, action := range sortedActions {
+		if trello.ListAfterAction(action) == nil {
+			continue
 		}
 
-		if listDuration.ListName == "Done" {
-			firstEnteredDoneList = listDuration.FirstEntered
+		if trello.ListAfterAction(action).ID == columns[2].ID { // READY
+			firstEnteredReadyList = action.Date
+		}
+
+		if trello.ListAfterAction(action).ID == columns[3].ID { // IN PROGRESS
+			firstEnteredInProgressList = action.Date
+		}
+
+		if trello.ListAfterAction(action).ID == columns[len(columns)-1].ID { // DONE
+			firstEnteredDoneList = action.Date
 		}
 	}
 
-	if firstEnteredReadyList.IsZero() { // handle cards that were created in a list down stream to Ready
-		firstEnteredReadyList = listDurations[0].FirstEntered
+	if firstEnteredReadyList.IsZero() { // handle cards that were created in the in progress list
+		firstEnteredReadyList = firstEnteredInProgressList
+	}
+
+	if firstEnteredReadyList.IsZero() { // handle cards that were created down stream to in progress
+		firstEnteredReadyList = sortedActions[0].Date
 	}
 
 	channel <- &cardFetchResult{
