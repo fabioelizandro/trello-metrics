@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -29,6 +30,16 @@ func main() {
 	cards, err := board.DoneCards()
 	if err != nil {
 		panic(err)
+	}
+
+	sort.Slice(cards, func(i, j int) bool {
+		return cards[i].DurationInDays < cards[j].DurationInDays
+	})
+
+	total := 0
+	for _, card := range cards {
+		total++
+		fmt.Printf("%d - %s - %f%%\n", card.DurationInDays, card.Name, (float64(total)/float64(len(cards)))*100)
 	}
 
 	histogram := map[int]int{}
