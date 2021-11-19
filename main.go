@@ -16,19 +16,19 @@ import (
 func main() {
 	env := goenv.NewEnv(goenv.MustParseDotfileFromFilepath(".env"))
 
-	board, err := kanban.CreateCachedBoard(
-		kanban.NewTrelloBoard(
-			trello.NewClient(
-				env.MustRead("TRELLO_API_KEY"),
-				env.MustRead("TRELLO_USER_TOKEN"),
-			),
-			env.MustRead("TRELLO_BOARD_ID"),
-		),
-		"trello-metrics",
-	)
+	cachedActions, err := kanban.CreateTrelloCachedCardActions("trello-metrics")
 	if err != nil {
 		panic(err)
 	}
+
+	board := kanban.NewTrelloBoard(
+		trello.NewClient(
+			env.MustRead("TRELLO_API_KEY"),
+			env.MustRead("TRELLO_USER_TOKEN"),
+		),
+		kanban.NewTrelloCardDuration(cachedActions),
+		env.MustRead("TRELLO_BOARD_ID"),
+	)
 
 	cards, err := board.DoneCards()
 	if err != nil {

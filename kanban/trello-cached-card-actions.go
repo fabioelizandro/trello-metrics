@@ -2,17 +2,19 @@ package kanban
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/adlio/trello"
 )
 
-type CachedBoard struct {
-	underlyingImpl Board
-	cacheDir       string
+type TrelloCachedCardActions struct {
+	cacheDir string
 }
 
-func CreateCachedBoard(underlyingImpl Board, cacheDir string) (*CachedBoard, error) {
+func CreateTrelloCachedCardActions(cacheDir string) (*TrelloCachedCardActions, error) {
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
 		return nil, err
@@ -27,23 +29,23 @@ func CreateCachedBoard(underlyingImpl Board, cacheDir string) (*CachedBoard, err
 		}
 	}
 
-	return &CachedBoard{underlyingImpl: underlyingImpl, cacheDir: appCacheDir}, nil
+	return &TrelloCachedCardActions{cacheDir: appCacheDir}, nil
 }
 
-func (t *CachedBoard) DoneCards() ([]*Card, error) {
+func (a *TrelloCachedCardActions) Actions(card *trello.Card) (trello.ActionCollection, error) {
 	cacheKey := filepath.Join(
-		t.cacheDir,
-		"done-cards.json",
+		a.cacheDir,
+		fmt.Sprintf("card-actions-%s.json", card.ID),
 	)
 
 	cache, err := ioutil.ReadFile(cacheKey)
 	if err != nil {
-		cards, err := t.underlyingImpl.DoneCards()
+		actions, err := card.GetActions()
 		if err != nil {
-			return cards, err
+			return actions, err
 		}
 
-		cache, err = json.Marshal(cards)
+		cache, err = json.Marshal(actions)
 		if err != nil {
 			return nil, err
 		}
@@ -54,11 +56,11 @@ func (t *CachedBoard) DoneCards() ([]*Card, error) {
 		}
 	}
 
-	cards := []*Card{}
-	err = json.Unmarshal(cache, &cards)
+	actions := trello.ActionCollection{}
+	err = json.Unmarshal(cache, &actions)
 	if err != nil {
 		return nil, err
 	}
 
-	return cards, nil
+	return actions.FilterToListChangeActions(), nil
 }
