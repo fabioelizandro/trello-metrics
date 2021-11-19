@@ -1,6 +1,8 @@
 package kanban
 
 import (
+	"sort"
+
 	"github.com/adlio/trello"
 )
 
@@ -62,6 +64,10 @@ func (b *TrelloBoard) DoneCards() ([]*Card, error) {
 
 		cards = append(cards, fetchResult.card)
 	}
+
+	sort.Slice(cards, func(i, j int) bool {
+		return cards[i].DurationInDays < cards[j].DurationInDays
+	})
 
 	return cards, nil
 }

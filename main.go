@@ -35,10 +35,6 @@ func main() {
 		panic(err)
 	}
 
-	sort.Slice(cards, func(i, j int) bool {
-		return cards[i].DurationInDays < cards[j].DurationInDays
-	})
-
 	total := 0
 	for _, card := range cards {
 		total++
