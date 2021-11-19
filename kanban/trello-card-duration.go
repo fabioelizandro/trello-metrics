@@ -15,48 +15,36 @@ func NewTrelloCardDuration(cachedActions *TrelloCachedCardActions) *TrelloCardDu
 	return &TrelloCardDuration{cachedActions: cachedActions}
 }
 
-func (d *TrelloCardDuration) DurationInDays(card *trello.Card, columns []*trello.List) (int,error) {
-	listChangeAction, err := d.cachedActions.Actions(card)
+func (d *TrelloCardDuration) DurationInDays(card *trello.Card, columns []*trello.List) (int, error) {
+	actions, err := d.cachedActions.ListChangeActions(card)
 	if err != nil {
 		return 0, err
 	}
 
-	if len(listChangeAction) == 0 {
+	if len(actions) == 0 {
 		return 0, nil
 	}
 
-	sortedActions := listChangeAction.FilterToListChangeActions()
-	sort.Slice(sortedActions, func(i, j int) bool {
-		return sortedActions[i].Date.Before(sortedActions[j].Date)
+	sort.Slice(actions, func(i, j int) bool {
+		return actions[i].Date.After(actions[j].Date)
 	})
 
-	firstEnteredDoneList := sortedActions[len(sortedActions)-1].Date
+	firstEnteredDoneList := actions[0].Date
+	firstEnteredReadyList := d.firstEnteredReadyList(2, columns, actions)
 
-	var firstEnteredReadyList time.Time
-	var firstEnteredInProgressList time.Time
+	return int(firstEnteredDoneList.Sub(firstEnteredReadyList).Round(time.Hour*24).Hours() / 24), nil
+}
+
+func (d *TrelloCardDuration) firstEnteredReadyList(readyColumnIndex int, columns []*trello.List, sortedActions trello.ActionCollection) time.Time {
 	for _, action := range sortedActions {
 		if trello.ListAfterAction(action) == nil {
 			continue
 		}
 
-		if trello.ListAfterAction(action).ID == columns[2].ID { // READY
-			firstEnteredReadyList = action.Date
-		}
-
-		if trello.ListAfterAction(action).ID == columns[3].ID { // IN PROGRESS
-			firstEnteredInProgressList = action.Date
+		if trello.ListAfterAction(action).ID == columns[readyColumnIndex].ID {
+			return action.Date
 		}
 	}
 
-	if firstEnteredReadyList.IsZero() { // handle cards that were created in the in progress list
-		firstEnteredReadyList = firstEnteredInProgressList
-	}
-
-	if firstEnteredReadyList.IsZero() { // handle cards that were created down stream to in progress
-		firstEnteredReadyList = sortedActions[0].Date
-	}
-
-	return int(firstEnteredDoneList.Sub(firstEnteredReadyList).Round(time.Hour*24).Hours() / 24), nil
+	return d.firstEnteredReadyList(readyColumnIndex+1, columns, sortedActions)
 }
-
-

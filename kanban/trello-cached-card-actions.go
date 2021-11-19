@@ -32,7 +32,7 @@ func CreateTrelloCachedCardActions(cacheDir string) (*TrelloCachedCardActions, e
 	return &TrelloCachedCardActions{cacheDir: appCacheDir}, nil
 }
 
-func (a *TrelloCachedCardActions) Actions(card *trello.Card) (trello.ActionCollection, error) {
+func (a *TrelloCachedCardActions) ListChangeActions(card *trello.Card) (trello.ActionCollection, error) {
 	cacheKey := filepath.Join(
 		a.cacheDir,
 		fmt.Sprintf("card-actions-%s.json", card.ID),
@@ -40,7 +40,7 @@ func (a *TrelloCachedCardActions) Actions(card *trello.Card) (trello.ActionColle
 
 	cache, err := ioutil.ReadFile(cacheKey)
 	if err != nil {
-		actions, err := card.GetActions()
+		actions, err := card.GetListChangeActions()
 		if err != nil {
 			return actions, err
 		}
@@ -62,5 +62,5 @@ func (a *TrelloCachedCardActions) Actions(card *trello.Card) (trello.ActionColle
 		return nil, err
 	}
 
-	return actions.FilterToListChangeActions(), nil
+	return actions, nil
 }
