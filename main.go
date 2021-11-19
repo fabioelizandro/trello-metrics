@@ -44,9 +44,7 @@ func main() {
 
 	histogram := map[int]int{}
 	for _, card := range cards {
-		if card.DurationInDays >= 0 {
-			histogram[card.DurationInDays]++
-		}
+		histogram[card.DurationInDays]++
 	}
 	xAxisInt := []int{}
 	for durationInDays := range histogram {
