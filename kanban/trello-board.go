@@ -36,7 +36,7 @@ func (b *TrelloBoard) DoneCards() ([]*Card, error) {
 		return nil, err
 	}
 
-	trelloCards, err := trelloColumns[len(trelloColumns)-1].GetCards() // get all cards from the done list
+	trelloCards, err := trelloColumns[len(trelloColumns)-1].GetCards()
 	if err != nil {
 		return nil, err
 	}

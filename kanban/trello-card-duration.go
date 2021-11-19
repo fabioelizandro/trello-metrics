@@ -21,17 +21,18 @@ func (d *TrelloCardDuration) DurationInDays(card *trello.Card, columns []*trello
 		return 0, err
 	}
 
+	if len(listChangeAction) == 0 {
+		return 0, nil
+	}
+
 	sortedActions := listChangeAction.FilterToListChangeActions()
 	sort.Slice(sortedActions, func(i, j int) bool {
 		return sortedActions[i].Date.Before(sortedActions[j].Date)
 	})
 
-	if len(sortedActions) == 0 {
-		return 0, nil
-	}
+	firstEnteredDoneList := sortedActions[len(sortedActions)-1].Date
 
 	var firstEnteredReadyList time.Time
-	var firstEnteredDoneList time.Time
 	var firstEnteredInProgressList time.Time
 	for _, action := range sortedActions {
 		if trello.ListAfterAction(action) == nil {
@@ -44,10 +45,6 @@ func (d *TrelloCardDuration) DurationInDays(card *trello.Card, columns []*trello
 
 		if trello.ListAfterAction(action).ID == columns[3].ID { // IN PROGRESS
 			firstEnteredInProgressList = action.Date
-		}
-
-		if trello.ListAfterAction(action).ID == columns[len(columns)-1].ID { // DONE
-			firstEnteredDoneList = action.Date
 		}
 	}
 
