@@ -52,30 +52,28 @@ func renderHistogram(cards []*kanban.Card) {
 	for _, card := range cards {
 		histogram[card.DurationInDays]++
 	}
+
 	xAxisInt := []int{}
 	for durationInDays := range histogram {
 		xAxisInt = append(xAxisInt, durationInDays)
 	}
 	sort.Ints(xAxisInt)
+	xAxis := []string{}
+	for _, i := range xAxisInt {
+		xAxis = append(xAxis, strconv.Itoa(i))
+	}
+	yAxis := []opts.BarData{}
+	for _, i := range xAxisInt {
+		yAxis = append(yAxis, opts.BarData{Value: histogram[i]})
+	}
 
 	bar := charts.NewBar()
 	bar.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
 		Title:    "Histogram",
 		Subtitle: "Shows the duration distribution of done cards",
 	}))
-
-	xAxis := []string{}
-	for _, i := range xAxisInt {
-		xAxis = append(xAxis, strconv.Itoa(i))
-	}
-
 	bar.SetXAxis(xAxis)
-	yAxis := []opts.BarData{}
-	for _, i := range xAxisInt {
-		yAxis = append(yAxis, opts.BarData{Value: histogram[i]})
-	}
 	bar.AddSeries("Done", yAxis)
-
 	f, err := os.Create("bar.html")
 	if err != nil {
 		panic(err)
