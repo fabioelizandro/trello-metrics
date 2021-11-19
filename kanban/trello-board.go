@@ -17,9 +17,9 @@ type cardFetchResult struct {
 	err error
 }
 
-func NewTrelloBoard(key, token, boardID string) *TrelloBoard {
+func NewTrelloBoard(client *trello.Client, boardID string) *TrelloBoard {
 	return &TrelloBoard{
-		client:  trello.NewClient(key, token),
+		client:  client,
 		boardID: boardID,
 	}
 }

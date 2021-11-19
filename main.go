@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"trello-metrics/kanban"
 
+	"github.com/adlio/trello"
 	"github.com/fabioelizandro/goenv"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -17,8 +18,10 @@ func main() {
 
 	board, err := kanban.CreateCachedBoard(
 		kanban.NewTrelloBoard(
-			env.MustRead("TRELLO_API_KEY"),
-			env.MustRead("TRELLO_USER_TOKEN"),
+			trello.NewClient(
+				env.MustRead("TRELLO_API_KEY"),
+				env.MustRead("TRELLO_USER_TOKEN"),
+			),
 			env.MustRead("TRELLO_BOARD_ID"),
 		),
 		"trello-metrics",
