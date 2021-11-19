@@ -26,7 +26,10 @@ func main() {
 			env.MustRead("TRELLO_API_KEY"),
 			env.MustRead("TRELLO_USER_TOKEN"),
 		),
-		kanban.NewTrelloCardDuration(cachedActions),
+		kanban.NewTrelloCardDuration(
+			cachedActions,
+			env.MustRead("TRELLO_READY_COLUMN"),
+		),
 		env.MustRead("TRELLO_BOARD_ID"),
 	)
 

@@ -8,11 +8,12 @@ import (
 )
 
 type TrelloCardDuration struct {
-	cachedActions *TrelloCachedCardActions
+	cachedActions   *TrelloCachedCardActions
+	readyColumnName string
 }
 
-func NewTrelloCardDuration(cachedActions *TrelloCachedCardActions) *TrelloCardDuration {
-	return &TrelloCardDuration{cachedActions: cachedActions}
+func NewTrelloCardDuration(cachedActions *TrelloCachedCardActions, readyColumnName string) *TrelloCardDuration {
+	return &TrelloCardDuration{cachedActions: cachedActions, readyColumnName: readyColumnName}
 }
 
 func (d *TrelloCardDuration) DurationInDays(card *trello.Card, columns []*trello.List) (int, error) {
@@ -29,8 +30,15 @@ func (d *TrelloCardDuration) DurationInDays(card *trello.Card, columns []*trello
 		return actions[i].Date.After(actions[j].Date)
 	})
 
+	readyColumnIndex := 0
+	for index, column := range columns {
+		if column.Name == d.readyColumnName {
+			readyColumnIndex = index
+		}
+	}
+
 	firstEnteredDoneList := actions[0].Date
-	firstEnteredReadyList := d.firstEnteredReadyList(2, columns, actions)
+	firstEnteredReadyList := d.firstEnteredReadyList(readyColumnIndex, columns, actions)
 
 	return int(firstEnteredDoneList.Sub(firstEnteredReadyList).Round(time.Hour*24).Hours() / 24), nil
 }
