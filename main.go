@@ -35,12 +35,19 @@ func main() {
 		panic(err)
 	}
 
+	printListWithPercentage(cards)
+	renderHistogram(cards)
+}
+
+func printListWithPercentage(cards []*kanban.Card) {
 	total := 0
 	for _, card := range cards {
 		total++
 		fmt.Printf("%d - %s - %f%%\n", card.DurationInDays, card.Name, (float64(total)/float64(len(cards)))*100)
 	}
+}
 
+func renderHistogram(cards []*kanban.Card) {
 	histogram := map[int]int{}
 	for _, card := range cards {
 		histogram[card.DurationInDays]++
