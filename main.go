@@ -46,7 +46,7 @@ func main() {
 	}
 
 	printMonteCarloSimulation(readyCards)
-	printListWithPercentage(doneCards)
+	renderListWithPercentage(doneCards)
 	renderHistogram(doneCards)
 }
 
@@ -56,7 +56,7 @@ func printMonteCarloSimulation(readyCards []*kanban.ReadyCard) {
 	}
 }
 
-func printListWithPercentage(doneCards []*kanban.DoneCard) {
+func renderListWithPercentage(doneCards []*kanban.DoneCard) {
 	total := 0
 	list := ""
 	for _, card := range doneCards {
