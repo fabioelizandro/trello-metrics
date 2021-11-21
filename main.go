@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"sort"
 	"strconv"
@@ -57,9 +58,28 @@ func printMonteCarloSimulation(readyCards []*kanban.ReadyCard) {
 
 func printListWithPercentage(doneCards []*kanban.DoneCard) {
 	total := 0
+	list := ""
 	for _, card := range doneCards {
 		total++
-		fmt.Printf("%d - %s - %f%%\n", card.DurationInDays, card.Name, (float64(total)/float64(len(doneCards)))*100)
+		list += fmt.Sprintf("<li>%d - %s - %f%%</li>", card.DurationInDays, card.Name, (float64(total)/float64(len(doneCards)))*100)
+	}
+
+	err := ioutil.WriteFile(
+		"done-cards-list-with-percentage.html",
+		[]byte(fmt.Sprintf(
+			`
+				<html>
+					<body>
+						<ul>%s</ul>
+					</body>
+				</html>
+			`,
+			list,
+		)),
+		0666,
+	)
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -90,7 +110,7 @@ func renderHistogram(doneCards []*kanban.DoneCard) {
 	}))
 	bar.SetXAxis(xAxis)
 	bar.AddSeries("Done", yAxis)
-	f, err := os.Create("bar.html")
+	f, err := os.Create("done-cards-histogram.html")
 	if err != nil {
 		panic(err)
 	}
