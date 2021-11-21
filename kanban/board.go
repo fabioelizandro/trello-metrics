@@ -1,10 +1,10 @@
 package kanban
 
 type Board interface {
-	DoneCards() ([]*Card, error)
+	DoneCards() ([]*DoneCard, error)
 }
 
-type Card struct {
+type DoneCard struct {
 	Name           string
 	DurationInDays int
 }

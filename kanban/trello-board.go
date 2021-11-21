@@ -13,7 +13,7 @@ type TrelloBoard struct {
 }
 
 type cardFetchResult struct {
-	card *Card
+	card *DoneCard
 	err  error
 }
 
@@ -25,7 +25,7 @@ func NewTrelloBoard(client *trello.Client, trelloCardDuration *TrelloCardDuratio
 	}
 }
 
-func (b *TrelloBoard) DoneCards() ([]*Card, error) {
+func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 	trelloBoard, err := b.client.GetBoard(b.boardID, trello.Defaults())
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (b *TrelloBoard) DoneCards() ([]*Card, error) {
 		go func(trelloCard *trello.Card) {
 			days, err := b.trelloCardDuration.DurationInDays(trelloCard, trelloColumns)
 			cardChannel <- &cardFetchResult{
-				card: &Card{
+				card: &DoneCard{
 					Name:           trelloCard.Name,
 					DurationInDays: days,
 				},
@@ -55,7 +55,7 @@ func (b *TrelloBoard) DoneCards() ([]*Card, error) {
 		}(trelloCard)
 	}
 
-	cards := []*Card{}
+	cards := []*DoneCard{}
 	for range trelloCards {
 		fetchResult := <-cardChannel
 		if fetchResult.err != nil {

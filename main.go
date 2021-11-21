@@ -42,7 +42,7 @@ func main() {
 	renderHistogram(cards)
 }
 
-func printListWithPercentage(cards []*kanban.Card) {
+func printListWithPercentage(cards []*kanban.DoneCard) {
 	total := 0
 	for _, card := range cards {
 		total++
@@ -50,7 +50,7 @@ func printListWithPercentage(cards []*kanban.Card) {
 	}
 }
 
-func renderHistogram(cards []*kanban.Card) {
+func renderHistogram(cards []*kanban.DoneCard) {
 	histogram := map[int]int{}
 	for _, card := range cards {
 		histogram[card.DurationInDays]++
