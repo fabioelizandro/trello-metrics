@@ -10,6 +10,7 @@ import (
 type TrelloBoard struct {
 	client            *trello.Client
 	trelloCardMetrics *TrelloCardMetrics
+	cachedActions     *TrelloCachedCardActions
 	readyColumnName   string
 	boardID           string
 }
@@ -19,10 +20,11 @@ type cardFetchResult struct {
 	err  error
 }
 
-func NewTrelloBoard(client *trello.Client, trelloCardMetrics *TrelloCardMetrics, readyColumnName string, boardID string) *TrelloBoard {
+func NewTrelloBoard(client *trello.Client, trelloCardMetrics *TrelloCardMetrics, cachedActions *TrelloCachedCardActions, readyColumnName string, boardID string) *TrelloBoard {
 	return &TrelloBoard{
 		client:            client,
 		trelloCardMetrics: trelloCardMetrics,
+		cachedActions:     cachedActions,
 		readyColumnName:   readyColumnName,
 		boardID:           boardID,
 	}
@@ -47,16 +49,7 @@ func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 	cardChannel := make(chan *cardFetchResult)
 	for _, trelloCard := range trelloCards {
 		go func(trelloCard *trello.Card) {
-			durationInDays, err := b.trelloCardMetrics.DurationInDays(trelloCard, trelloColumns)
-			if err != nil {
-				cardChannel <- &cardFetchResult{
-					card: nil,
-					err:  err,
-				}
-				return
-			}
-
-			doneAt, err := b.trelloCardMetrics.DoneAt(trelloCard)
+			actions, err := b.cachedActions.ListChangeActions(trelloCard)
 			if err != nil {
 				cardChannel <- &cardFetchResult{
 					card: nil,
@@ -68,8 +61,8 @@ func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 			cardChannel <- &cardFetchResult{
 				card: &DoneCard{
 					Name:           trelloCard.Name,
-					DurationInDays: durationInDays,
-					DoneAt:         doneAt,
+					DurationInDays: b.trelloCardMetrics.DurationInDays(actions, trelloColumns),
+					DoneAt:         b.trelloCardMetrics.DoneAt(trelloCard, actions),
 				},
 				err: nil,
 			}

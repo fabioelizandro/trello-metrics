@@ -8,22 +8,16 @@ import (
 )
 
 type TrelloCardMetrics struct {
-	cachedActions   *TrelloCachedCardActions
 	readyColumnName string
 }
 
-func NewTrelloCardMetrics(cachedActions *TrelloCachedCardActions, readyColumnName string) *TrelloCardMetrics {
-	return &TrelloCardMetrics{cachedActions: cachedActions, readyColumnName: readyColumnName}
+func NewTrelloCardMetrics(readyColumnName string) *TrelloCardMetrics {
+	return &TrelloCardMetrics{readyColumnName: readyColumnName}
 }
 
-func (d *TrelloCardMetrics) DurationInDays(card *trello.Card, columns []*trello.List) (int, error) {
-	actions, err := d.cachedActions.ListChangeActions(card)
-	if err != nil {
-		return 0, err
-	}
-
+func (d *TrelloCardMetrics) DurationInDays(actions trello.ActionCollection, columns []*trello.List) int {
 	if len(actions) == 0 {
-		return 0, nil
+		return 0
 	}
 
 	sort.Slice(actions, func(i, j int) bool {
@@ -40,24 +34,19 @@ func (d *TrelloCardMetrics) DurationInDays(card *trello.Card, columns []*trello.
 	firstEnteredDoneList := actions[0].Date
 	firstEnteredReadyList := d.firstEnteredReadyList(readyColumnIndex, columns, actions)
 
-	return int(firstEnteredDoneList.Sub(firstEnteredReadyList).Round(time.Hour*24).Hours() / 24), nil
+	return int(firstEnteredDoneList.Sub(firstEnteredReadyList).Round(time.Hour*24).Hours() / 24)
 }
 
-func (d *TrelloCardMetrics) DoneAt(card *trello.Card) (time.Time, error) {
-	actions, err := d.cachedActions.ListChangeActions(card)
-	if err != nil {
-		return time.Time{}, err
-	}
-
+func (d *TrelloCardMetrics) DoneAt(card *trello.Card, actions trello.ActionCollection) time.Time {
 	if len(actions) == 0 {
-		return card.CreatedAt(), nil
+		return card.CreatedAt()
 	}
 
 	sort.Slice(actions, func(i, j int) bool {
 		return actions[i].Date.After(actions[j].Date)
 	})
 
-	return actions[0].Date, nil
+	return actions[0].Date
 }
 
 func (d *TrelloCardMetrics) firstEnteredReadyList(readyColumnIndex int, columns []*trello.List, sortedActions trello.ActionCollection) time.Time {

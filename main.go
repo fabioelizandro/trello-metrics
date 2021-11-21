@@ -28,9 +28,9 @@ func main() {
 			env.MustRead("TRELLO_USER_TOKEN"),
 		),
 		kanban.NewTrelloCardMetrics(
-			cachedActions,
 			env.MustRead("TRELLO_READY_COLUMN"),
 		),
+		cachedActions,
 		env.MustRead("TRELLO_READY_COLUMN"),
 		env.MustRead("TRELLO_BOARD_ID"),
 	)
