@@ -6,7 +6,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
-	"trello-metrics/kanban"
+	"trello-metrics/trellometrics"
 
 	"github.com/adlio/trello"
 	"github.com/fabioelizandro/goenv"
@@ -17,17 +17,17 @@ import (
 func main() {
 	env := goenv.NewEnv(goenv.MustParseDotfileFromFilepath(".env"))
 
-	cachedActions, err := kanban.CreateTrelloCachedCardActions("trello-metrics")
+	cachedActions, err := trellometrics.CreateCachedCardActions("trello-metrics")
 	if err != nil {
 		panic(err)
 	}
 
-	board := kanban.NewTrelloBoard(
+	board := trellometrics.NewBoard(
 		trello.NewClient(
 			env.MustRead("TRELLO_API_KEY"),
 			env.MustRead("TRELLO_USER_TOKEN"),
 		),
-		kanban.NewTrelloCardMetrics(
+		trellometrics.NewCardMetrics(
 			env.MustRead("TRELLO_READY_COLUMN"),
 		),
 		cachedActions,
@@ -50,13 +50,13 @@ func main() {
 	renderHistogram(doneCards)
 }
 
-func printMonteCarloSimulation(readyCards []*kanban.ReadyCard) {
+func printMonteCarloSimulation(readyCards []*trellometrics.ReadyCard) {
 	for _, card := range readyCards {
 		println(card.Name)
 	}
 }
 
-func renderListWithPercentage(doneCards []*kanban.DoneCard) {
+func renderListWithPercentage(doneCards []*trellometrics.DoneCard) {
 	total := 0
 	list := ""
 	for _, card := range doneCards {
@@ -83,7 +83,7 @@ func renderListWithPercentage(doneCards []*kanban.DoneCard) {
 	}
 }
 
-func renderHistogram(doneCards []*kanban.DoneCard) {
+func renderHistogram(doneCards []*trellometrics.DoneCard) {
 	histogram := map[int]int{}
 	for _, card := range doneCards {
 		histogram[card.LeadTime]++

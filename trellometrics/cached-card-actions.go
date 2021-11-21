@@ -1,4 +1,4 @@
-package kanban
+package trellometrics
 
 import (
 	"encoding/json"
@@ -10,11 +10,11 @@ import (
 	"github.com/adlio/trello"
 )
 
-type TrelloCachedCardActions struct {
+type CachedCardActions struct {
 	cacheDir string
 }
 
-func CreateTrelloCachedCardActions(cacheDir string) (*TrelloCachedCardActions, error) {
+func CreateCachedCardActions(cacheDir string) (*CachedCardActions, error) {
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
 		return nil, err
@@ -29,10 +29,10 @@ func CreateTrelloCachedCardActions(cacheDir string) (*TrelloCachedCardActions, e
 		}
 	}
 
-	return &TrelloCachedCardActions{cacheDir: appCacheDir}, nil
+	return &CachedCardActions{cacheDir: appCacheDir}, nil
 }
 
-func (a *TrelloCachedCardActions) ListChangeActions(card *trello.Card) (trello.ActionCollection, error) {
+func (a *CachedCardActions) ListChangeActions(card *trello.Card) (trello.ActionCollection, error) {
 	cacheKey := filepath.Join(
 		a.cacheDir,
 		fmt.Sprintf("card-actions-%s.json", card.ID),

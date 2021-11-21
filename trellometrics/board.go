@@ -1,18 +1,29 @@
-package kanban
+package trellometrics
 
 import (
 	"errors"
 	"sort"
+	"time"
 
 	"github.com/adlio/trello"
 )
 
-type TrelloBoard struct {
+type Board struct {
 	client            *trello.Client
-	trelloCardMetrics *TrelloCardMetrics
-	cachedActions     *TrelloCachedCardActions
+	trelloCardMetrics *CardMetrics
+	cachedActions     *CachedCardActions
 	readyColumnName   string
 	boardID           string
+}
+
+type DoneCard struct {
+	Name     string
+	LeadTime int
+	DoneAt   time.Time
+}
+
+type ReadyCard struct {
+	Name string
 }
 
 type cardFetchResult struct {
@@ -20,17 +31,17 @@ type cardFetchResult struct {
 	err  error
 }
 
-func NewTrelloBoard(client *trello.Client, trelloCardMetrics *TrelloCardMetrics, cachedActions *TrelloCachedCardActions, readyColumnName string, boardID string) *TrelloBoard {
-	return &TrelloBoard{
+func NewBoard(client *trello.Client, cardMetrics *CardMetrics, cachedActions *CachedCardActions, readyColumnName string, boardID string) *Board {
+	return &Board{
 		client:            client,
-		trelloCardMetrics: trelloCardMetrics,
+		trelloCardMetrics: cardMetrics,
 		cachedActions:     cachedActions,
 		readyColumnName:   readyColumnName,
 		boardID:           boardID,
 	}
 }
 
-func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
+func (b *Board) DoneCards() ([]*DoneCard, error) {
 	trelloBoard, err := b.client.GetBoard(b.boardID, trello.Defaults())
 	if err != nil {
 		return nil, err
@@ -86,7 +97,7 @@ func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 	return cards, nil
 }
 
-func (b *TrelloBoard) ReadyCards() ([]*ReadyCard, error) {
+func (b *Board) ReadyCards() ([]*ReadyCard, error) {
 	trelloBoard, err := b.client.GetBoard(b.boardID, trello.Defaults())
 	if err != nil {
 		return nil, err

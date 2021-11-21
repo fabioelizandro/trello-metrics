@@ -1,4 +1,4 @@
-package kanban
+package trellometrics
 
 import (
 	"sort"
@@ -7,15 +7,15 @@ import (
 	"github.com/adlio/trello"
 )
 
-type TrelloCardMetrics struct {
+type CardMetrics struct {
 	readyColumnName string
 }
 
-func NewTrelloCardMetrics(readyColumnName string) *TrelloCardMetrics {
-	return &TrelloCardMetrics{readyColumnName: readyColumnName}
+func NewCardMetrics(readyColumnName string) *CardMetrics {
+	return &CardMetrics{readyColumnName: readyColumnName}
 }
 
-func (d *TrelloCardMetrics) LeadTime(actions trello.ActionCollection, columns []*trello.List) int {
+func (d *CardMetrics) LeadTime(actions trello.ActionCollection, columns []*trello.List) int {
 	if len(actions) == 0 {
 		return 0
 	}
@@ -37,7 +37,7 @@ func (d *TrelloCardMetrics) LeadTime(actions trello.ActionCollection, columns []
 	return int(firstEnteredDoneList.Sub(firstEnteredReadyList).Round(time.Hour*24).Hours() / 24)
 }
 
-func (d *TrelloCardMetrics) DoneAt(card *trello.Card, actions trello.ActionCollection) time.Time {
+func (d *CardMetrics) DoneAt(card *trello.Card, actions trello.ActionCollection) time.Time {
 	if len(actions) == 0 {
 		return card.CreatedAt()
 	}
@@ -49,7 +49,7 @@ func (d *TrelloCardMetrics) DoneAt(card *trello.Card, actions trello.ActionColle
 	return actions[0].Date
 }
 
-func (d *TrelloCardMetrics) firstEnteredReadyList(readyColumnIndex int, columns []*trello.List, sortedActions trello.ActionCollection) time.Time {
+func (d *CardMetrics) firstEnteredReadyList(readyColumnIndex int, columns []*trello.List, sortedActions trello.ActionCollection) time.Time {
 	for _, action := range sortedActions {
 		if trello.ListAfterAction(action) == nil {
 			continue
