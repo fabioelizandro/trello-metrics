@@ -8,10 +8,10 @@ import (
 )
 
 type TrelloBoard struct {
-	client             *trello.Client
-	trelloCardDuration *TrelloCardDuration
-	readyColumnName    string
-	boardID            string
+	client            *trello.Client
+	trelloCardMetrics *TrelloCardMetrics
+	readyColumnName   string
+	boardID           string
 }
 
 type cardFetchResult struct {
@@ -19,12 +19,12 @@ type cardFetchResult struct {
 	err  error
 }
 
-func NewTrelloBoard(client *trello.Client, trelloCardDuration *TrelloCardDuration, readyColumnName string, boardID string) *TrelloBoard {
+func NewTrelloBoard(client *trello.Client, trelloCardMetrics *TrelloCardMetrics, readyColumnName string, boardID string) *TrelloBoard {
 	return &TrelloBoard{
-		client:             client,
-		trelloCardDuration: trelloCardDuration,
-		readyColumnName:    readyColumnName,
-		boardID:            boardID,
+		client:            client,
+		trelloCardMetrics: trelloCardMetrics,
+		readyColumnName:   readyColumnName,
+		boardID:           boardID,
 	}
 }
 
@@ -47,7 +47,7 @@ func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 	cardChannel := make(chan *cardFetchResult)
 	for _, trelloCard := range trelloCards {
 		go func(trelloCard *trello.Card) {
-			days, err := b.trelloCardDuration.DurationInDays(trelloCard, trelloColumns)
+			days, err := b.trelloCardMetrics.DurationInDays(trelloCard, trelloColumns)
 			cardChannel <- &cardFetchResult{
 				card: &DoneCard{
 					Name:           trelloCard.Name,

@@ -7,16 +7,16 @@ import (
 	"github.com/adlio/trello"
 )
 
-type TrelloCardDuration struct {
+type TrelloCardMetrics struct {
 	cachedActions   *TrelloCachedCardActions
 	readyColumnName string
 }
 
-func NewTrelloCardDuration(cachedActions *TrelloCachedCardActions, readyColumnName string) *TrelloCardDuration {
-	return &TrelloCardDuration{cachedActions: cachedActions, readyColumnName: readyColumnName}
+func NewTrelloCardMetrics(cachedActions *TrelloCachedCardActions, readyColumnName string) *TrelloCardMetrics {
+	return &TrelloCardMetrics{cachedActions: cachedActions, readyColumnName: readyColumnName}
 }
 
-func (d *TrelloCardDuration) DurationInDays(card *trello.Card, columns []*trello.List) (int, error) {
+func (d *TrelloCardMetrics) DurationInDays(card *trello.Card, columns []*trello.List) (int, error) {
 	actions, err := d.cachedActions.ListChangeActions(card)
 	if err != nil {
 		return 0, err
@@ -43,7 +43,7 @@ func (d *TrelloCardDuration) DurationInDays(card *trello.Card, columns []*trello
 	return int(firstEnteredDoneList.Sub(firstEnteredReadyList).Round(time.Hour*24).Hours() / 24), nil
 }
 
-func (d *TrelloCardDuration) firstEnteredReadyList(readyColumnIndex int, columns []*trello.List, sortedActions trello.ActionCollection) time.Time {
+func (d *TrelloCardMetrics) firstEnteredReadyList(readyColumnIndex int, columns []*trello.List, sortedActions trello.ActionCollection) time.Time {
 	for _, action := range sortedActions {
 		if trello.ListAfterAction(action) == nil {
 			continue
