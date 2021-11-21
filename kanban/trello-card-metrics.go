@@ -15,7 +15,7 @@ func NewTrelloCardMetrics(readyColumnName string) *TrelloCardMetrics {
 	return &TrelloCardMetrics{readyColumnName: readyColumnName}
 }
 
-func (d *TrelloCardMetrics) DurationInDays(actions trello.ActionCollection, columns []*trello.List) int {
+func (d *TrelloCardMetrics) LeadTime(actions trello.ActionCollection, columns []*trello.List) int {
 	if len(actions) == 0 {
 		return 0
 	}

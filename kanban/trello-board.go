@@ -60,9 +60,9 @@ func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 
 			cardChannel <- &cardFetchResult{
 				card: &DoneCard{
-					Name:           trelloCard.Name,
-					DurationInDays: b.trelloCardMetrics.DurationInDays(actions, trelloColumns),
-					DoneAt:         b.trelloCardMetrics.DoneAt(trelloCard, actions),
+					Name:     trelloCard.Name,
+					LeadTime: b.trelloCardMetrics.LeadTime(actions, trelloColumns),
+					DoneAt:   b.trelloCardMetrics.DoneAt(trelloCard, actions),
 				},
 				err: nil,
 			}
@@ -80,7 +80,7 @@ func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 	}
 
 	sort.Slice(cards, func(i, j int) bool {
-		return cards[i].DurationInDays < cards[j].DurationInDays
+		return cards[i].LeadTime < cards[j].LeadTime
 	})
 
 	return cards, nil

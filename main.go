@@ -61,7 +61,7 @@ func renderListWithPercentage(doneCards []*kanban.DoneCard) {
 	list := ""
 	for _, card := range doneCards {
 		total++
-		list += fmt.Sprintf("<li>%d - %s - %f%%</li>", card.DurationInDays, card.Name, (float64(total)/float64(len(doneCards)))*100)
+		list += fmt.Sprintf("<li>%d - %s - %f%%</li>", card.LeadTime, card.Name, (float64(total)/float64(len(doneCards)))*100)
 	}
 
 	err := ioutil.WriteFile(
@@ -86,7 +86,7 @@ func renderListWithPercentage(doneCards []*kanban.DoneCard) {
 func renderHistogram(doneCards []*kanban.DoneCard) {
 	histogram := map[int]int{}
 	for _, card := range doneCards {
-		histogram[card.DurationInDays]++
+		histogram[card.LeadTime]++
 	}
 
 	xAxisInt := []int{}

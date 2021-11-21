@@ -8,9 +8,9 @@ type Board interface {
 }
 
 type DoneCard struct {
-	Name           string
-	DurationInDays int
-	DoneAt         time.Time
+	Name     string
+	LeadTime int
+	DoneAt   time.Time
 }
 
 type ReadyCard struct {
