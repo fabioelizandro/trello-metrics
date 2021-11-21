@@ -43,6 +43,23 @@ func (d *TrelloCardMetrics) DurationInDays(card *trello.Card, columns []*trello.
 	return int(firstEnteredDoneList.Sub(firstEnteredReadyList).Round(time.Hour*24).Hours() / 24), nil
 }
 
+func (d *TrelloCardMetrics) DoneAt(card *trello.Card) (time.Time, error) {
+	actions, err := d.cachedActions.ListChangeActions(card)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if len(actions) == 0 {
+		return card.CreatedAt(), nil
+	}
+
+	sort.Slice(actions, func(i, j int) bool {
+		return actions[i].Date.After(actions[j].Date)
+	})
+
+	return actions[0].Date, nil
+}
+
 func (d *TrelloCardMetrics) firstEnteredReadyList(readyColumnIndex int, columns []*trello.List, sortedActions trello.ActionCollection) time.Time {
 	for _, action := range sortedActions {
 		if trello.ListAfterAction(action) == nil {

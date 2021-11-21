@@ -47,13 +47,31 @@ func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 	cardChannel := make(chan *cardFetchResult)
 	for _, trelloCard := range trelloCards {
 		go func(trelloCard *trello.Card) {
-			days, err := b.trelloCardMetrics.DurationInDays(trelloCard, trelloColumns)
+			durationInDays, err := b.trelloCardMetrics.DurationInDays(trelloCard, trelloColumns)
+			if err != nil {
+				cardChannel <- &cardFetchResult{
+					card: nil,
+					err:  err,
+				}
+				return
+			}
+
+			doneAt, err := b.trelloCardMetrics.DoneAt(trelloCard)
+			if err != nil {
+				cardChannel <- &cardFetchResult{
+					card: nil,
+					err:  err,
+				}
+				return
+			}
+
 			cardChannel <- &cardFetchResult{
 				card: &DoneCard{
 					Name:           trelloCard.Name,
-					DurationInDays: days,
+					DurationInDays: durationInDays,
+					DoneAt:         doneAt,
 				},
-				err: err,
+				err: nil,
 			}
 		}(trelloCard)
 	}
