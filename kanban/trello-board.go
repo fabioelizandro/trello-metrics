@@ -1,6 +1,7 @@
 package kanban
 
 import (
+	"errors"
 	"sort"
 
 	"github.com/adlio/trello"
@@ -9,6 +10,7 @@ import (
 type TrelloBoard struct {
 	client             *trello.Client
 	trelloCardDuration *TrelloCardDuration
+	readyColumnName    string
 	boardID            string
 }
 
@@ -17,10 +19,11 @@ type cardFetchResult struct {
 	err  error
 }
 
-func NewTrelloBoard(client *trello.Client, trelloCardDuration *TrelloCardDuration, boardID string) *TrelloBoard {
+func NewTrelloBoard(client *trello.Client, trelloCardDuration *TrelloCardDuration, readyColumnName string, boardID string) *TrelloBoard {
 	return &TrelloBoard{
 		client:             client,
 		trelloCardDuration: trelloCardDuration,
+		readyColumnName:    readyColumnName,
 		boardID:            boardID,
 	}
 }
@@ -50,7 +53,7 @@ func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 					Name:           trelloCard.Name,
 					DurationInDays: days,
 				},
-				err:  err,
+				err: err,
 			}
 		}(trelloCard)
 	}
@@ -70,4 +73,39 @@ func (b *TrelloBoard) DoneCards() ([]*DoneCard, error) {
 	})
 
 	return cards, nil
+}
+
+func (b *TrelloBoard) ReadyCards() ([]*ReadyCard, error) {
+	trelloBoard, err := b.client.GetBoard(b.boardID, trello.Defaults())
+	if err != nil {
+		return nil, err
+	}
+
+	trelloColumns, err := trelloBoard.GetLists()
+	if err != nil {
+		return nil, err
+	}
+
+	var readyColumn *trello.List
+	for _, column := range trelloColumns {
+		if column.Name == b.readyColumnName {
+			readyColumn = column
+		}
+	}
+
+	if readyColumn == nil {
+		return nil, errors.New("ready column not found")
+	}
+
+	trelloCards, err := readyColumn.GetCards()
+	if err != nil {
+		return nil, err
+	}
+
+	readyCards := []*ReadyCard{}
+	for _, card := range trelloCards {
+		readyCards = append(readyCards, &ReadyCard{Name: card.Name})
+	}
+
+	return readyCards, nil
 }

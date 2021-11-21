@@ -30,29 +30,42 @@ func main() {
 			cachedActions,
 			env.MustRead("TRELLO_READY_COLUMN"),
 		),
+		env.MustRead("TRELLO_READY_COLUMN"),
 		env.MustRead("TRELLO_BOARD_ID"),
 	)
 
-	cards, err := board.DoneCards()
+	doneCards, err := board.DoneCards()
 	if err != nil {
 		panic(err)
 	}
 
-	printListWithPercentage(cards)
-	renderHistogram(cards)
+	readyCards, err := board.ReadyCards()
+	if err != nil {
+		panic(err)
+	}
+
+	printMonteCarloSimulation(readyCards)
+	printListWithPercentage(doneCards)
+	renderHistogram(doneCards)
 }
 
-func printListWithPercentage(cards []*kanban.DoneCard) {
-	total := 0
-	for _, card := range cards {
-		total++
-		fmt.Printf("%d - %s - %f%%\n", card.DurationInDays, card.Name, (float64(total)/float64(len(cards)))*100)
+func printMonteCarloSimulation(readyCards []*kanban.ReadyCard) {
+	for _, card := range readyCards {
+		println(card.Name)
 	}
 }
 
-func renderHistogram(cards []*kanban.DoneCard) {
+func printListWithPercentage(doneCards []*kanban.DoneCard) {
+	total := 0
+	for _, card := range doneCards {
+		total++
+		fmt.Printf("%d - %s - %f%%\n", card.DurationInDays, card.Name, (float64(total)/float64(len(doneCards)))*100)
+	}
+}
+
+func renderHistogram(doneCards []*kanban.DoneCard) {
 	histogram := map[int]int{}
-	for _, card := range cards {
+	for _, card := range doneCards {
 		histogram[card.DurationInDays]++
 	}
 
